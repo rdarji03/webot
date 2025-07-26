@@ -9,10 +9,11 @@ class PyObjectId(ObjectId):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls, v, _info):
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid objectid")
         return ObjectId(v)
+
 
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
@@ -23,8 +24,9 @@ class PyObjectId(ObjectId):
 
 class WebPage(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    website_id: int
+    website_id: PyObjectId
     page: str
+    content: str
 
     class Config:
         populate_by_name = True

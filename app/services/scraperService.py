@@ -1,19 +1,13 @@
 from app.models.web_crawl import WebScrawl
 from app.config import db
-from uuid import uuid4
 import subprocess
 
 website_collection = db['crawl_website']
 
 
 async def store_website(web_data):
-    crawl_id = str(uuid4())
-    data = WebScrawl(
-        website_name=web_data['website'],
-        crawl_id=crawl_id
-    )
-
-    # isExistWebsite = await website_collection.find_one({'website_name': data.website_name})
+   
+    # isExistWebsite = await website_collection.find_one({'website_name': web_data['website']})
     # if isExistWebsite:
     #     return {
     #         "status": True,

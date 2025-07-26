@@ -1,10 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
-import sys
-import io
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
+import sys
+import os
+import io
+import asyncio
+from urllib.parse import urljoin, urlparse
+from bs4 import BeautifulSoup
+import requests
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', '..')))
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+from app.services.scrapperStoreService import store_pages
+from app.services.scrapperStoreService import store_website
 
 extracted_url = set()
 
@@ -58,6 +64,7 @@ def start_extracting_content(link):
             website_content = "\n".join(clean_lines)
 
             data = {
+                'link':link,
                 'title': website_title,
                 'content': website_content,
             }
@@ -66,20 +73,32 @@ def start_extracting_content(link):
     return data
 
 
-if __name__ == "__main__":
+
+
+async def main():
     if len(sys.argv) < 2:
         print("Usage: python script.py <website_url>")
         sys.exit(1)
 
     website_url = sys.argv[1]
     process = check_valid_url(website_url)
-    if process:
-        for link in extracted_url:
-            scrap = start_extracting_content(link)
-            if scrap:
-                print(f"\nScraping: {link}")
-                print(f"Title: {scrap['title']}")
-
-                print(f"Content:\n{scrap['content']}...")
-    else:
+    
+    if not process:
         print("Invalid website URL")
+        return
+
+    web_data = await store_website(website_url)
+    web_id = web_data['data']['id']
+
+    for link in extracted_url:
+        scrap = start_extracting_content(link)
+        if scrap.get('content'):
+            await store_pages(web_id, link,scrap['content'])  # ✅ Now it's correct
+        if scrap:
+            print(f"\nScraping: {link}")
+            print(f"Title: {scrap['title']}")
+            print(f"Content:\n{scrap['content']}...")
+
+if __name__ == "__main__":
+    asyncio.run(main())  # ✅ Only one asyncio.run() at top-level
+
